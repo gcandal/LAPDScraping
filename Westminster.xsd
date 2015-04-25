@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified"
+    xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" vc:minVersion="1.1">
+    <xs:simpleType name="URL">
+        <xs:restriction base="xs:token">
+            <xs:pattern value="^(\/[A-Za-z0-9\.]+)*$"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="Debate">
+        <xs:sequence minOccurs="1" maxOccurs="1">
+            <xs:element name="Theme" type="xs:string"/>
+            <xs:element name="Body" type="xs:string"/>
+            <xs:element name="Date" type="xs:date"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="Debates">
+        <xs:sequence minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="Debate" type="Debate"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="Person">
+        <xs:sequence minOccurs="1" maxOccurs="1">
+            <xs:element name="Name" type="xs:string"/>
+            <xs:element name="Debates" type="Debates"/>
+        </xs:sequence>
+
+        <xs:attribute name="id" type="xs:unsignedInt" use="required"/>
+        <!-- <xs:attribute name="ImageUrl" type="URL" use="required"/> -->
+    </xs:complexType>
+
+    <xs:complexType name="Membership">
+        <xs:sequence minOccurs="1" maxOccurs="1">
+            <xs:element name="Party" type="xs:string"/>
+            <xs:element name="Constituency" type="xs:string"/>
+            <xs:element name="Title" type="xs:string"/>
+            <xs:element name="EnteredHouse" type="xs:date"/>
+            <xs:element name="LeftHouse" type="xs:date"/>
+            <xs:element name="EnteredReason" type="xs:string"/>
+            <xs:element name="LeftReason" type="xs:string"/>
+        </xs:sequence>
+
+        <xs:attribute name="id" type="xs:unsignedInt" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="Offices">
+        <xs:sequence minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="Office" type="Office"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="Office">
+        <xs:sequence minOccurs="1" maxOccurs="1">
+            <xs:element name="Department" type="xs:string"/>
+            <xs:element name="Position" type="xs:string"/>
+            <xs:element name="From" type="xs:date"/>
+            <xs:element name="To" type="xs:date"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="Membership_with_offices">
+        <xs:complexContent>
+            <xs:extension base="Membership">
+                <xs:sequence minOccurs="1" maxOccurs="1">
+                    <xs:element name="Offices" type="Offices"></xs:element>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="MP">
+        <xs:complexContent>
+            <xs:extension base="Person">
+                <xs:sequence minOccurs="1" maxOccurs="unbounded">
+                    <xs:element name="Membership" type="Membership_with_offices"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="MSP_MLA_Lord">
+        <xs:complexContent>
+            <xs:extension base="Person">
+                <xs:sequence minOccurs="1" maxOccurs="unbounded">
+                    <xs:element name="Membership" type="Membership"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="Westminster">
+        <xs:sequence minOccurs="0" maxOccurs="1">
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:element name="MP" type="MP"/>
+                <xs:element name="Lord" type="MSP_MLA_Lord"/>
+                <xs:element name="MSP" type="MSP_MLA_Lord"/>
+                <xs:element name="MLA" type="MSP_MLA_Lord"/>
+            </xs:choice>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="Westminster" type="Westminster"/>
+</xs:schema>
