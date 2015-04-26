@@ -2,10 +2,27 @@ import urllib2
 import json
 import codecs
 
+
 def build_url(function):
     url = "http://www.theyworkforyou.com/api/%s?key=%s&output=js" % (function, "F8cN3CG2CfGWHFPBpoAWfFcW")
     if function == 'getMPs':
         url += '&date=30-03-2015'
+    return url
+
+
+def build_url_debates(type, person_id):
+    if type == 'MSP':
+        chamber = 'scotland'
+    elif type == 'Lord':
+        chamber = 'lords'
+    elif type == 'MP':
+        chamber = 'commons'
+    else:
+        chamber = 'northernireland'
+
+    url = "http://www.theyworkforyou.com/api/getDebates?type=%s&key=%s&output=js&person=%s" % (
+        chamber, "F8cN3CG2CfGWHFPBpoAWfFcW", person_id)
+
     return url
 
 
@@ -23,20 +40,32 @@ def get_members(position):
     return [parse_url_json(build_url('get%s' % position) + "&id=" + person_id) for person_id in ids]
 
 
+def reduce_debates(debates):
+    return [{'date': row['hdate'], 'theme': row['parent']['body'], 'body': row['body']} for row in debates['rows']]
+
+
+def get_debates(person_id, type):
+    return parse_url_json(build_url_debates(type, person_id))
+
+
 def get_everything():
-    #positions = ['MSP', 'Lord', 'MP', 'MLA']
-    positions = ['MLA']
+    positions = ['MSP', 'Lord', 'MP', 'MLA']
+    # positions = ['MLA']
 
     for position in positions:
-        with open('teste.json', 'w') as f:
-            members = get_members(position)
-            print json.dumps(members)
+        members = get_members(position)
+        for member in members:
+            member[0]['debates'] = reduce_debates(get_debates(member[0]['person_id'], position))
+
+        with open('%ss.json' % position.lower(), 'w') as f:
             f.write(json.dumps(members))
             f.close()
 
+        print position + " scraping finished"
+
 
 def read_everything():
-    #positions = ['MSP', 'Lord', 'MP', 'MLA']
+    # positions = ['MSP', 'Lord', 'MP', 'MLA']
     positions = ['Lord', 'MSP', 'MLA']
 
     people = {'people': {"mps": [], 'mlas': [], 'lords': [], 'msps': []}}
@@ -50,6 +79,13 @@ def read_everything():
 
 def write_person_debates(person, f):
     f.write('\t\t<Debates>\n')
+    for debate in person[0]['debates']:
+        f.write('\t\t\t<Debate>\n')
+        f.write('\t\t\t\t<Theme>%s</Theme>\n' % debate['theme'])
+        f.write('\t\t\t\t<Date>%s</Date>\n' % debate['date'])
+        f.write('\t\t\t\t<Body>%s</Body>\n' % debate['body'])
+        f.write('\t\t\t</Debate>\n')
+
     f.write('\t\t</Debates>\n')
 
 
@@ -83,7 +119,8 @@ def write_xml(people, filename):
     positions = ['Lord', 'MSP', 'MLA']
 
     with codecs.open(filename, 'w', 'utf-8') as f:
-        f.write('<?xml version="1.0" encoding="UTF-8"?>\n<Westminster xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n\txsi:noNamespaceSchemaLocation="Westminster.xsd">\n')
+        f.write(
+            '<?xml version="1.0" encoding="UTF-8"?>\n<Westminster xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n\txsi:noNamespaceSchemaLocation="Westminster.xsd">\n')
         for position in positions:
             write_person(people, f, position)
         f.write('</Westminster>\n')
@@ -97,5 +134,6 @@ def filter_date(date):
         return date
 
 
-#get_everything()
+# get_everything()
+# print 'Scraping finished'
 write_xml(read_everything(), 'Westminster.xml')
