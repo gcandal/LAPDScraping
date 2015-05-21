@@ -77,6 +77,15 @@ def read_everything():
     return people
 
 
+def read_position(position):
+    people = {'people': {"mps": [], 'mlas': [], 'lords': [], 'msps': []}}
+
+    with open('%ss.json' % position.lower()) as f:
+        people['people'][position] = json.load(f)
+
+    return people
+
+
 def write_person_debates(person, f):
     f.write('\t\t<Debates>\n')
     for debate in person[0]['debates']:
@@ -115,9 +124,7 @@ def write_person(people, f, type):
         f.write('\t</%s>\n' % type)
 
 
-def write_xml(people, filename):
-    positions = ['Lord', 'MSP', 'MLA']
-
+def write_xml(people, filename, positions):
     with codecs.open(filename, 'w', 'utf-8') as f:
         f.write(
             '<?xml version="1.0" encoding="UTF-8"?>\n<Westminster xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n\txsi:noNamespaceSchemaLocation="Westminster.xsd">\n')
@@ -136,4 +143,7 @@ def filter_date(date):
 
 # get_everything()
 # print 'Scraping finished'
-write_xml(read_everything(), 'Westminster.xml')
+# write_xml(read_everything(), 'Westminster.xml', ['Lord', 'MSP', 'MLA'])
+# write_xml(read_position('Lord'), 'Lords.xml', ['Lord'])
+write_xml(read_position('MSP'), 'MSPs.xml', ['MSP'])
+write_xml(read_position('MLA'), 'MLAs.xml', ['MLA'])
